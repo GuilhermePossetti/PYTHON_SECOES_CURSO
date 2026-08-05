@@ -1,12 +1,12 @@
 import sys
 
+from buttons import ButtonsGrid
 from display import Display
 from info import Info
 from main_window import MainWindow
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QApplication
 from styles import setupTheme
-from buttons import Button, ButtonsGrid
 from variables import WINDOW_ICON_PATH
 
 if __name__ == '__main__':
@@ -21,7 +21,7 @@ if __name__ == '__main__':
     app.setWindowIcon(icon)
 
     # Info
-    info = Info('2.0 ^ 10.0 = 1024')
+    info = Info('Sua conta')
     window.addWidgetToVLayout(info)
 
     # Display
@@ -29,18 +29,10 @@ if __name__ == '__main__':
     window.addWidgetToVLayout(display)
 
     # Grid
-    buttonsGrid = ButtonsGrid(display)
+    buttonsGrid = ButtonsGrid(display, info)
     window.vLayout.addLayout(buttonsGrid)
 
-    # # Button
-    # button = Button('0')
-    # buttonsGrid.addWidget(button, 0, 0)
-
-    # button2 = Button('1')
-    # buttonsGrid.addWidget(button2, 0, 1)
-    
-
-    # Executa tudo 
+    # Executa tudo
     window.adjustFixedSize()
     window.show()
     app.exec()
