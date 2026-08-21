@@ -14,7 +14,7 @@ def quadriplicar(numero):
     
 print(duplicar(2))
 print(triplicar(2))
-print(quadruplicar(2))
+print(quadriplicar(2))
 
 #################### OU ######################
 
