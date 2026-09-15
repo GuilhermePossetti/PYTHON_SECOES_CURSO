@@ -1,6 +1,8 @@
 # Ambiente virtual
 .venv/
 venv/
+mysql_206
+
 
 # Cache do Python
 __pycache__/
