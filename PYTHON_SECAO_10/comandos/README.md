@@ -2,6 +2,7 @@ python -m venv venv
 . venv/bin/activate
 pip install django
 django-admin startproject project .
+pythpn manage.py startapp contact
 
 git config --global user.name 'Seu nome'
 git config --global user.email 'seu_email@gmail.com'
