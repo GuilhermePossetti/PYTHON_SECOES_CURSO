@@ -51,13 +51,13 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'nome_do_projeto.urls'
+ROOT_URLCONF = 'project.urls'
 
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [
-            BASE_DIR / 'base',
+            BASE_DIR / 'base'
         ],
         'APP_DIRS': True,
         'OPTIONS': {
@@ -71,7 +71,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'nome_do_projeto.wsgi.application'
+WSGI_APPLICATION = 'project.wsgi.application'
 
 
 # Database
@@ -123,6 +123,8 @@ STATIC_URL = 'static/'
 STATICFILES_DIRS = [
     BASE_DIR / 'base' / 'static'
 ]
+# https://whitenoise.readthedocs.io/en/latest/
+STATIC_ROOT = BASE_DIR / 'static_files'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
