@@ -1,0 +1,3 @@
+SECRETY_KEY = 'CHANGE-ME'
+DEBUG = True
+ALLOWED_HOST: list[str] = []
