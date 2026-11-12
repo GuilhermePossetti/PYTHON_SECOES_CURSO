@@ -1,94 +1,74 @@
-from django.shortcuts import get_object_or_404, redirect, render
-from django.urls import reverse
+from django import forms
+from django.core.exceptions import ValidationError
 
-from contact.forms import ContactForm
-from contact.models import Contact
+from . import models
 
 
-def create(request):
-    form_action = reverse('contact:create')
+class ContactForm(forms.ModelForm):
+    first_name = forms.CharField(
+        widget=forms.TextInput(
+            attrs={
+                'class': 'classe-a classe-b',
+                'placeholder': 'Aqui veio do init',
+            }
+        ),
+        label='Primeiro Nome',
+        help_text='Texto de ajuda para seu usuário',
+    )
 
-    if request.method == 'POST':
-        form = ContactForm(request.POST)
+    picture = forms.ImageField(
+        widget=forms.FileInput(
+            attrs={
+                'class': 'classe-a classe-b',
+                'placeholder': 'Aqui veio do init',
+                'accept': 'image/*',
+            }
+        ),
+        label='Foto',
+    )
 
-        context = {
-            'form': form,
-            'form_action': form_action,
-        }
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
-        if form.is_valid():
-            contact = form.save()
-            return redirect('contact:update', contact_id=contact.pk)
+        # self.fields['first_name'].widget.attrs.update({
+        #     'class': 'classe-a classe-b',
+        #     'placeholder': 'Aqui veio do init',
+        # })
 
-        return render(
-            request,
-            'contact/create.html',
-            context
+    class Meta:
+        model = models.Contact
+        fields = (
+            'first_name', 'last_name', 'phone',
+            'email', 'description', 'category',
+            'picture',
         )
 
-    context = {
-        'form': ContactForm(),
-        'form_action': form_action,
-    }
+    def clean(self):
+        cleaned_data = super().clean()
 
-    return render(
-        request,
-        'contact/create.html',
-        context
-    )
+        first_name = cleaned_data.get('first_name')
+        last_name = cleaned_data.get('last_name')
 
+        if first_name == last_name:
+            msg = ValidationError(
+                'Primeiro nome não pode ser igual ao segundo',
+                code='invalid'
+            )
+            self.add_error('first_name', msg)
+            self.add_error('last_name', msg)
 
-def update(request, contact_id):
-    contact = get_object_or_404(
-        Contact, pk=contact_id, show=True
-    )
-    form_action = reverse('contact:update', args=(contact_id,))
+        return cleaned_data
 
-    if request.method == 'POST':
-        form = ContactForm(request.POST, instance=contact)
+    def clean_first_name(self):
+        first_name = self.cleaned_data.get('first_name')
 
-        context = {
-            'form': form,
-            'form_action': form_action,
-        }
+        if first_name == 'ABC':
+            self.add_error(
+                'first_name',
+                ValidationError(
+                    'Veio do add_error',
+                    code='invalid'
+                )
+            )
 
-        if form.is_valid():
-            contact = form.save()
-            return redirect('contact:update', contact_id=contact.pk)
-
-        return render(
-            request,
-            'contact/create.html',
-            context
-        )
-
-    context = {
-        'form': ContactForm(instance=contact),
-        'form_action': form_action,
-    }
-
-    return render(
-        request,
-        'contact/create.html',
-        context
-    )
-
-
-def delete(request, contact_id):
-    contact = get_object_or_404(
-        Contact, pk=contact_id, show=True
-    )
-    confirmation = request.POST.get('confirmation', 'no')
-
-    if confirmation == 'yes':
-        contact.delete()
-        return redirect('contact:index')
-
-    return render(
-        request,
-        'contact/contact.html',
-        {
-            'contact': contact,
-            'confirmation': confirmation,
-        }
-    )
+        return first_name
