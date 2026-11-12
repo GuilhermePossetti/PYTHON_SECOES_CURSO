@@ -13,7 +13,8 @@ class ContactForm(forms.ModelForm):
             attrs={
                 'accept': 'image/*',
             }
-        )
+        ),
+        required=False
     )
 
     class Meta:
@@ -25,11 +26,11 @@ class ContactForm(forms.ModelForm):
         )
 
     def clean(self):
-        cleaned_data = self.cleaned_data
+        cleaned_data = super().clean()
         first_name = cleaned_data.get('first_name')
         last_name = cleaned_data.get('last_name')
 
-        if first_name == last_name:
+        if first_name and last_name and first_name == last_name:
             msg = ValidationError(
                 'Primeiro nome não pode ser igual ao segundo',
                 code='invalid'
@@ -37,7 +38,7 @@ class ContactForm(forms.ModelForm):
             self.add_error('first_name', msg)
             self.add_error('last_name', msg)
 
-        return super().clean()
+        return cleaned_data
 
     def clean_first_name(self):
         first_name = self.cleaned_data.get('first_name')
@@ -78,7 +79,10 @@ class RegisterForm(UserCreationForm):
         if User.objects.filter(email=email).exists():
             self.add_error(
                 'email',
-                ValidationError('Já existe este e-mail', code='invalid')
+                ValidationError(
+                    'Já existe este e-mail',
+                    code='invalid'
+                )
             )
 
         return email
@@ -94,6 +98,7 @@ class RegisterUpdateForm(forms.ModelForm):
             'min_length': 'Please, add more than 2 letters.'
         }
     )
+
     last_name = forms.CharField(
         min_length=2,
         max_length=30,
@@ -104,7 +109,9 @@ class RegisterUpdateForm(forms.ModelForm):
     password1 = forms.CharField(
         label="Password",
         strip=False,
-        widget=forms.PasswordInput(attrs={"autocomplete": "new-password"}),
+        widget=forms.PasswordInput(
+            attrs={"autocomplete": "new-password"}
+        ),
         help_text=password_validation.password_validators_help_text_html(),
         required=False,
     )
@@ -112,7 +119,9 @@ class RegisterUpdateForm(forms.ModelForm):
     password2 = forms.CharField(
         label="Password 2",
         strip=False,
-        widget=forms.PasswordInput(attrs={"autocomplete": "new-password"}),
+        widget=forms.PasswordInput(
+            attrs={"autocomplete": "new-password"}
+        ),
         help_text='Use the same password as before.',
         required=False,
     )
@@ -138,8 +147,9 @@ class RegisterUpdateForm(forms.ModelForm):
         return user
 
     def clean(self):
-        password1 = self.cleaned_data.get('password1')
-        password2 = self.cleaned_data.get('password2')
+        cleaned_data = super().clean()
+        password1 = cleaned_data.get('password1')
+        password2 = cleaned_data.get('password2')
 
         if password1 or password2:
             if password1 != password2:
@@ -148,7 +158,7 @@ class RegisterUpdateForm(forms.ModelForm):
                     ValidationError('Senhas não batem')
                 )
 
-        return super().clean()
+        return cleaned_data
 
     def clean_email(self):
         email = self.cleaned_data.get('email')
@@ -158,7 +168,10 @@ class RegisterUpdateForm(forms.ModelForm):
             if User.objects.filter(email=email).exists():
                 self.add_error(
                     'email',
-                    ValidationError('Já existe este e-mail', code='invalid')
+                    ValidationError(
+                        'Já existe este e-mail',
+                        code='invalid'
+                    )
                 )
 
         return email
@@ -168,11 +181,11 @@ class RegisterUpdateForm(forms.ModelForm):
 
         if password1:
             try:
-                password_validation.validate_password(password1)
-            except ValidationError as errors:
-                self.add_error(
-                    'password1',
-                    ValidationError(errors)
+                password_validation.validate_password(
+                    password1,
+                    self.instance
                 )
+            except ValidationError as errors:
+                self.add_error('password1', errors)
 
         return password1

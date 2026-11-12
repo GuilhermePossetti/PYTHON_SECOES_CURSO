@@ -1,74 +1,108 @@
-from django import forms
-from django.core.exceptions import ValidationError
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 
-from . import models
+from contact.forms import ContactForm
+from contact.models import Contact
 
 
-class ContactForm(forms.ModelForm):
-    first_name = forms.CharField(
-        widget=forms.TextInput(
-            attrs={
-                'class': 'classe-a classe-b',
-                'placeholder': 'Aqui veio do init',
-            }
-        ),
-        label='Primeiro Nome',
-        help_text='Texto de ajuda para seu usuário',
-    )
+@login_required(login_url='contact:login')
+def create(request):
+    form_action = reverse('contact:create')
 
-    picture = forms.ImageField(
-        widget=forms.FileInput(
-            attrs={
-                'class': 'classe-a classe-b',
-                'placeholder': 'Aqui veio do init',
-                'accept': 'image/*',
-            }
-        ),
-        label='Foto',
-    )
+    if request.method == 'POST':
+        form = ContactForm(request.POST, request.FILES)
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        context = {
+            'form': form,
+            'form_action': form_action,
+        }
 
-        # self.fields['first_name'].widget.attrs.update({
-        #     'class': 'classe-a classe-b',
-        #     'placeholder': 'Aqui veio do init',
-        # })
+        if form.is_valid():
+            contact = form.save(commit=False)
+            contact.owner = request.user
+            contact.save()
+            return redirect('contact:update', contact_id=contact.pk)
 
-    class Meta:
-        model = models.Contact
-        fields = (
-            'first_name', 'last_name', 'phone',
-            'email', 'description', 'category',
-            'picture',
+        return render(
+            request,
+            'contact/create.html',
+            context
         )
 
-    def clean(self):
-        cleaned_data = super().clean()
+    context = {
+        'form': ContactForm(),
+        'form_action': form_action,
+    }
 
-        first_name = cleaned_data.get('first_name')
-        last_name = cleaned_data.get('last_name')
+    return render(
+        request,
+        'contact/create.html',
+        context
+    )
 
-        if first_name == last_name:
-            msg = ValidationError(
-                'Primeiro nome não pode ser igual ao segundo',
-                code='invalid'
-            )
-            self.add_error('first_name', msg)
-            self.add_error('last_name', msg)
 
-        return cleaned_data
+@login_required(login_url='contact:login')
+def update(request, contact_id):
+    contact = get_object_or_404(
+        Contact,
+        pk=contact_id,
+        show=True,
+        owner=request.user
+    )
 
-    def clean_first_name(self):
-        first_name = self.cleaned_data.get('first_name')
+    form_action = reverse('contact:update', args=(contact_id,))
 
-        if first_name == 'ABC':
-            self.add_error(
-                'first_name',
-                ValidationError(
-                    'Veio do add_error',
-                    code='invalid'
-                )
-            )
+    if request.method == 'POST':
+        form = ContactForm(request.POST, request.FILES, instance=contact)
 
-        return first_name
+        context = {
+            'form': form,
+            'form_action': form_action,
+        }
+
+        if form.is_valid():
+            contact = form.save()
+            return redirect('contact:update', contact_id=contact.pk)
+
+        return render(
+            request,
+            'contact/create.html',
+            context
+        )
+
+    context = {
+        'form': ContactForm(instance=contact),
+        'form_action': form_action,
+    }
+
+    return render(
+        request,
+        'contact/create.html',
+        context
+    )
+
+
+@login_required(login_url='contact:login')
+def delete(request, contact_id):
+    contact = get_object_or_404(
+        Contact,
+        pk=contact_id,
+        show=True,
+        owner=request.user
+    )
+
+    confirmation = request.POST.get('confirmation', 'no')
+
+    if confirmation == 'yes':
+        contact.delete()
+        return redirect('contact:index')
+
+    return render(
+        request,
+        'contact/contact.html',
+        {
+            'contact': contact,
+            'confirmation': confirmation,
+        }
+    )
